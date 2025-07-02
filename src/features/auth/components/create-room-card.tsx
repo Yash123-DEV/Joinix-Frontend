@@ -4,11 +4,17 @@ import { useEffect, useState } from "react";
 import { createRoom } from "@/lib/api";
 // import { useRouter } from "next/navigation";
 
+
+type Room = {
+  roomId: string;
+  // add more if your API returns more
+};
+
 export default function CreateRoomCard() {
     //const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [roomData, setRoomData] = useState<any>(null);
+  const [roomData, setRoomData] = useState<Room | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
 
   // ✅ Get userId from localStorage once component mounts
@@ -39,12 +45,14 @@ export default function CreateRoomCard() {
       //router.push(`/room/${room.roomId}`);
 
 
-    } catch (err: any) {
-      console.error("Create room error:", err.message);
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+    console.error("Create room error:", err.message);
+    setError(err.message);
+  } else {
+    setError("Unknown error occurred");
+  }
+}
   };
 
   return (

@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import io from "socket.io-client";
 
 
-const socket = io("http://localhost:5000", {withCredentials: true});
+const socket = io("https://joinix-backend-1.onrender.com");
 
 export default function VideoRoom ({roomId}: {roomId: string}) {
     const localVideoRef = useRef<HTMLVideoElement>(null);
@@ -33,7 +33,7 @@ export default function VideoRoom ({roomId}: {roomId: string}) {
                 stream.getTracks().forEach((track) => peer.addTrack(track, stream));
             });
 
-            socket.on("offer", async (data) => {
+            socket.on("offer", async (data: {offer: RTCSessionDescriptionInit }) => {
                 const peer = createPeer(roomId, false);
                 peerRef.current = peer;
                 stream.getTracks().forEach((track) => peer.addTrack(track, stream));
@@ -43,13 +43,13 @@ export default function VideoRoom ({roomId}: {roomId: string}) {
                 socket.emit("answer", { roomId, answer });
             });
 
-            socket.on("answer", async (data) => {
+            socket.on("answer", async (data: { answer: RTCSessionDescriptionInit }) => {
                 await peerRef.current?.setRemoteDescription(
                 new RTCSessionDescription(data.answer)
                 );
             });
 
-            socket.on("ice-candidate", async (data) => {
+            socket.on("ice-candidate", async (data:{ candidate: RTCIceCandidateInit }) => {
                 try {
                     await peerRef.current?.addIceCandidate(data.candidate);
                 } catch (error) {
@@ -107,7 +107,7 @@ return (
         <video ref={localVideoRef} autoPlay playsInline muted className="rounded-xl w-full shadow" />
       </div>
       <div>
-        <h2 className="text-lg font-bold mb-2">Friend's Camera</h2>
+        <h2 className="text-lg font-bold mb-2">Friend&apos;s Camera</h2>
         <video ref={remoteVideoRef} autoPlay playsInline className="rounded-xl w-full shadow" />
       </div>
     </div>
