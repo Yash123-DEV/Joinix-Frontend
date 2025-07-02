@@ -10,7 +10,7 @@ import {z} from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {Form, FormControl, FormField, FormItem, FormMessage} from "@/components/ui/form"
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+// import { useRouter } from "next/navigation";
 
 
 
@@ -23,7 +23,7 @@ const formSchema = z.object({
 
 const SignUpCard = () => {
 
-   const router = useRouter();
+   // const router = useRouter();
 
    const form = useForm<z.infer<typeof formSchema>>({
       resolver: zodResolver(formSchema),

@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { createRoom } from "@/lib/api";
-import { useRouter } from "next/navigation";
+// import { useRouter } from "next/navigation";
 
 export default function CreateRoomCard() {
-    const router = useRouter();
+    //const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [roomData, setRoomData] = useState<any>(null);
