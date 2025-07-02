@@ -2,7 +2,7 @@
 
 
 export const createRoom = async ( userId: string ) => {
-    const res = await fetch("https://joinix-backend-1.onrender.com/api/rooms/create", {
+    const res = await fetch("https://joinix-backend1.onrender.com/api/rooms/create", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",

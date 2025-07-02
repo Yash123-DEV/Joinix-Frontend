@@ -17,7 +17,7 @@ export default function JoinRoomForm() {
     }
 
     try {
-      const res = await fetch("https://joinix-backend-1.onrender.com/api/rooms/join", {
+      const res = await fetch("https://joinix-backend1.onrender.com/api/rooms/join", {
   method: "POST",
   headers: {
     "Content-Type": "application/json",

@@ -39,7 +39,7 @@ const SignInCard = () => {
          console.log({values}); 
 
          try {
-            const res = await fetch("https://joinix-backend-1.onrender.com/api/auth/signin", {
+            const res = await fetch("https://joinix-backend1.onrender.com/api/auth/signin", {
                method: "POST",
                headers: {
                   "Content-Type": "application/json",

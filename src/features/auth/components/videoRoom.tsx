@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import io from "socket.io-client";
 
 
-const socket = io("https://joinix-backend-1.onrender.com");
+const socket = io("https://joinix-backend1.onrender.com");
 
 export default function VideoRoom ({roomId}: {roomId: string}) {
     const localVideoRef = useRef<HTMLVideoElement>(null);

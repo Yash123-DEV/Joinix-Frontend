@@ -39,7 +39,7 @@ const SignUpCard = () => {
       console.log("Form submitted with values:", values);
 
       try{
-         const res = await fetch("https://joinix-backend-1.onrender.com/api/auth/signup", {
+         const res = await fetch("https://joinix-backend1.onrender.com/api/auth/signup", {
             method: "POST",
             headers: {
                "Content-Type": "application/json",

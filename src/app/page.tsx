@@ -8,7 +8,7 @@ export default function Home() {
   useEffect(() => {
     const checkSession = async () => {
       try {
-        const res = await fetch("https://joinix-backend-1.onrender.com/api/auth/me",{
+        const res = await fetch("https://joinix-backend1.onrender.com/api/auth/me",{
           credentials: "include",
         });
 
