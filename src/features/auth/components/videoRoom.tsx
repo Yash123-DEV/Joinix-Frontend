@@ -25,18 +25,27 @@ export default function VideoRoom ({roomId}: {roomId: string}) {
             }
 
             socket.emit("joinRoom", roomId);
+            socket.emit("checkPeers", roomId); // custom event to detect peer presence
+
+
+            
 
             socket.on("user-joined", async () => {
+                // let isInitiator = false;
+                // isInitiator = true;
                 if (peerRef.current) return;
-                const peer = createPeer(roomId);
+                const peer = createPeer(roomId, true);
                 peerRef.current = peer;
-                stream.getTracks().forEach((track) => peer.addTrack(track, stream));
+                localStreamRef.current?.getTracks().forEach(track => peer.addTrack(track, localStreamRef.current!));
+                //stream.getTracks().forEach((track) => peer.addTrack(track, stream));
+                
             });
+
 
             socket.on("offer", async (data: {offer: RTCSessionDescriptionInit }) => {
                 const peer = createPeer(roomId, false);
                 peerRef.current = peer;
-                stream.getTracks().forEach((track) => peer.addTrack(track, stream));
+                localStreamRef.current?.getTracks().forEach(track => peer.addTrack(track, localStreamRef.current!));
                 await peer.setRemoteDescription(new RTCSessionDescription(data.offer));
                 const answer = await peer.createAnswer();
                 await peer.setLocalDescription(answer);
@@ -83,6 +92,7 @@ export default function VideoRoom ({roomId}: {roomId: string}) {
     };
 
     peer.ontrack = (event) => {
+        console.log("remote video stream", event);
         if(remoteVideoRef.current) {
             remoteVideoRef.current.srcObject = event.streams[0];
         }
