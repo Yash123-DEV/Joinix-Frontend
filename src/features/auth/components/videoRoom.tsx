@@ -206,6 +206,7 @@ socket.on("offer", async (data: { offer: RTCSessionDescriptionInit }) => {
         socket.on("connect", () => {
           console.log("Socket connected");
           setConnectionStatus("Waiting for peer...");
+           setTimeout(() => socket.connect(), 2000);
         });
 
         socket.on("disconnect", () => {
