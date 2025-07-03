@@ -22,25 +22,32 @@ export default function VideoRoom({ roomId }: { roomId: string }) {
     }
 
     const peer = new RTCPeerConnection({
-      iceServers: [
-        { urls: "stun:stun.l.google.com:19302" },
-        {
-          urls: "turn:joinix.metered.live:80",
-          username: "a97f911436e3a1ea691c9d14",
-          credential: "FgbJfeX6qEHUexDT",
-        },
-        {
-          urls: "turn:joinix.metered.live:443",
-          username: "a97f911436e3a1ea691c9d14",
-          credential: "FgbJfeX6qEHUexDT",
-        },
-        {
-          urls: "turn:joinix.metered.live:443?transport=tcp",
-          username: "a97f911436e3a1ea691c9d14",
-          credential: "FgbJfeX6qEHUexDT",
-        },
-      ],
-    });
+  iceServers: [
+      {
+        urls: "stun:stun.relay.metered.ca:80",
+      },
+      {
+        urls: "turn:global.relay.metered.ca:80",
+        username: "a97f911436e3a1ea691c9d14",
+        credential: "FgbJfeX6qEHUexDT",
+      },
+      {
+        urls: "turn:global.relay.metered.ca:80?transport=tcp",
+        username: "a97f911436e3a1ea691c9d14",
+        credential: "FgbJfeX6qEHUexDT",
+      },
+      {
+        urls: "turn:global.relay.metered.ca:443",
+        username: "a97f911436e3a1ea691c9d14",
+        credential: "FgbJfeX6qEHUexDT",
+      },
+      {
+        urls: "turns:global.relay.metered.ca:443?transport=tcp",
+        username: "a97f911436e3a1ea691c9d14",
+        credential: "FgbJfeX6qEHUexDT",
+      },
+  ],
+});
 
     peer.onicecandidate = (event) => {
       if (event.candidate) {
