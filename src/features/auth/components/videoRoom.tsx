@@ -13,6 +13,7 @@ export default function VideoRoom({ roomId }: { roomId: string }) {
   const peerRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
   const [connectionStatus, setConnectionStatus] = useState("Connecting...");
+  const isMakingOfferRef = useRef(false);
 
   const createPeerConnection = useCallback(() => {
     // Clean up existing connection if any
@@ -49,33 +50,45 @@ export default function VideoRoom({ roomId }: { roomId: string }) {
     };
 
     peer.ontrack = (event) => {
-      console.log("Received remote track:", event.track.kind);
-      if (!remoteVideoRef.current) return;
-
-      const remoteStream = event.streams[0] || new MediaStream([event.track]);
-      remoteVideoRef.current.srcObject = remoteStream;
-      setConnectionStatus("Connected");
-    };
+  const remoteStream = new MediaStream();
+  remoteStream.addTrack(event.track);
+  
+  // Clean up previous stream
+  if (remoteVideoRef.current?.srcObject) {
+    (remoteVideoRef.current.srcObject as MediaStream)
+      .getTracks()
+      .forEach(track => track.stop());
+  }
+  
+  remoteVideoRef.current!.srcObject = remoteStream;
+};
 
     peer.oniceconnectionstatechange = () => {
-      const state = peer.iceConnectionState;
-      console.log("ICE connection state:", state);
-      setConnectionStatus(state.charAt(0).toUpperCase() + state.slice(1));
+  const state = peer.iceConnectionState;
+  setConnectionStatus(state.charAt(0).toUpperCase() + state.slice(1));
 
-      if (state === "failed" || state === "disconnected") {
-        console.log("Attempting to restart ICE...");
-        // Could implement reconnection logic here
+  if (state === "failed") {
+    // Restart ICE
+    setTimeout(() => {
+      if (peerRef.current && peerRef.current.iceConnectionState === "failed") {
+        console.log("Restarting ICE...");
+        createPeerConnection();
       }
-    };
+    }, 2000);
+  }
+};
 
     peer.onnegotiationneeded = async () => {
       console.log("Negotiation needed");
       try {
+        isMakingOfferRef.current = true;
         const offer = await peer.createOffer();
         await peer.setLocalDescription(offer);
         socket.emit("offer", { roomId, offer });
       } catch (err) {
-        console.error("Negotiation error:", err);
+        console.error("Offer creation error:", err);
+      } finally {
+        isMakingOfferRef.current = false;
       }
     };
 
@@ -115,39 +128,60 @@ export default function VideoRoom({ roomId }: { roomId: string }) {
 
         socket.on("user-joined", async () => {
           console.log("Remote user joined");
-          peerRef.current = createPeerConnection();
-        });
-
-        socket.on("offer", async (data: { offer: RTCSessionDescriptionInit }) => {
-          console.log("Received offer");
           if (!peerRef.current) {
             peerRef.current = createPeerConnection();
           }
-
-          try {
-            await peerRef.current.setRemoteDescription(
-              new RTCSessionDescription(data.offer)
-            );
-            const answer = await peerRef.current.createAnswer();
-            await peerRef.current.setLocalDescription(answer);
-            socket.emit("answer", { roomId, answer });
-          } catch (err) {
-            console.error("Offer handling error:", err);
-          }
         });
+
+        const polite = true; // Or determine politeness based on room/user
+
+socket.on("offer", async (data: { offer: RTCSessionDescriptionInit }) => {
+  if (!peerRef.current) return;
+  
+  try {
+    const offerCollision = peerRef.current.signalingState !== "stable" && !polite;
+    
+    if (offerCollision) {
+      await Promise.all([
+        peerRef.current.setLocalDescription({type: "rollback"}),
+        peerRef.current.setRemoteDescription(data.offer)
+      ]);
+    } else {
+      await peerRef.current.setRemoteDescription(data.offer);
+    }
+    
+    const answer = await peerRef.current.createAnswer();
+    await peerRef.current.setLocalDescription(answer);
+    socket.emit("answer", { roomId, answer });
+  } catch (err) {
+    console.error("Offer handling error:", err);
+  }
+});
 
         socket.on("answer", async (data: { answer: RTCSessionDescriptionInit }) => {
-          console.log("Received answer");
-          if (peerRef.current) {
-            try {
-              await peerRef.current.setRemoteDescription(
-                new RTCSessionDescription(data.answer)
-              );
-            } catch (err) {
-              console.error("Answer handling error:", err);
-            }
-          }
-        });
+  if (!peerRef.current) return;
+  console.log("Received answer");
+
+  try {
+    // Only set the answer if we are in correct signaling state
+    if (
+      peerRef.current.signalingState === "have-local-offer" &&
+      !peerRef.current.remoteDescription
+    ) {
+      await peerRef.current.setRemoteDescription(
+        new RTCSessionDescription(data.answer)
+      );
+    } else {
+      console.warn(
+        "Skipped setting remote answer — invalid state:",
+        peerRef.current.signalingState
+      );
+    }
+  } catch (err) {
+    console.error("Answer handling error:", err);
+  }
+});
+
 
         socket.on("ice-candidate", async (data: { candidate: RTCIceCandidateInit }) => {
           console.log("Received ICE candidate");
@@ -225,14 +259,15 @@ export default function VideoRoom({ roomId }: { roomId: string }) {
           style={{ maxHeight: "300px" }}
         />
         <div className="mt-2 text-sm">
-          <p className="font-medium">Status: {connectionStatus}</p>
-          {peerRef.current && (
-            <p className="text-gray-600">
-              ICE: {peerRef.current.iceConnectionState} | 
-              Signaling: {peerRef.current.signalingState}
-            </p>
-          )}
-        </div>
+  <p className="font-medium">Status: {connectionStatus}</p>
+  {peerRef.current && (
+    <>
+      <p className="text-gray-600">ICE: {peerRef.current.iceConnectionState}</p>
+      <p className="text-gray-600">Signaling: {peerRef.current.signalingState}</p>
+      <p className="text-gray-600">Connection: {peerRef.current.connectionState}</p>
+    </>
+  )}
+</div>
       </div>
     </div>
   );
