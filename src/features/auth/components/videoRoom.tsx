@@ -5,6 +5,9 @@ import io from "socket.io-client";
 
 const socket = io("https://joinix-backend1.onrender.com", {
   transports: ["websocket"],
+  reconnection: true,
+  reconnectionAttempts: 5,
+  reconnectionDelay: 2000
 });
 
 export default function VideoRoom({ roomId }: { roomId: string }) {
@@ -206,7 +209,7 @@ socket.on("offer", async (data: { offer: RTCSessionDescriptionInit }) => {
         socket.on("connect", () => {
           console.log("Socket connected");
           setConnectionStatus("Waiting for peer...");
-           setTimeout(() => socket.connect(), 2000);
+           //setTimeout(() => socket.connect(), 2000);// remove 
         });
 
         socket.on("disconnect", () => {
